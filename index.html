@@ -477,13 +477,11 @@
         // --- FIREBASE AUTHENTICATION ---
         auth.onAuthStateChanged(user => {
             if (user) {
-                // User is logged in
                 authContainer.style.display = 'none';
                 mainApp.style.display = 'block';
                 document.getElementById('userEmail').textContent = user.email;
                 initializeChat();
             } else {
-                // User is logged out
                 mainApp.style.display = 'none';
                 authContainer.style.display = 'flex';
                 loginForm.style.display = 'block';
@@ -530,7 +528,7 @@
         logoutBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to logout?')) {
                 auth.signOut();
-                localStorage.removeItem('chatpkr_chats'); // Clear local storage on logout
+                localStorage.removeItem('chatpkr_chats');
             }
         });
 
@@ -622,9 +620,8 @@
         function addMessage(text, sender) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}-message`;
-            // Simple sanitization
             const sanitizedText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            messageDiv.innerHTML = sanitizedText.replace(/\n/g, '<br>'); // Render newlines
+            messageDiv.innerHTML = sanitizedText.replace(/\n/g, '<br>');
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
@@ -632,34 +629,41 @@
         function showTyping() { typingIndicator.style.display = 'flex'; chatMessages.scrollTop = chatMessages.scrollHeight; }
         function hideTyping() { typingIndicator.style.display = 'none'; }
 
-        // --- NEW, SECURE AI RESPONSE FUNCTION ---
+        // --- UPDATED, MORE RELIABLE AI RESPONSE FUNCTION ---
         async function getAIResponse(userMessage) {
             try {
-                // The URL now points to our own serverless function
+                // The URL points to our own serverless function.
                 const response = await fetch('/.netlify/functions/get-ai-response', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    // We only need to send the user's message
+                    // We send the message in a JSON object, as expected by our function.
                     body: JSON.stringify({
                         message: userMessage
                     })
                 });
 
+                // If the server itself gives an error (like 500, 404, etc.)
                 if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
+                    const errorText = await response.text();
+                    throw new Error(`Server function error: ${response.status} - ${errorText}`);
                 }
 
+                // Get the JSON data from the function's response.
                 const data = await response.json();
                 
+                // Check if the AI's response is in the expected format.
                 if (data.choices && data.choices[0] && data.choices[0].message) {
                     return data.choices[0].message.content;
                 } else {
-                    throw new Error('Invalid response format from serverless function');
+                    // If the format is wrong, it might be an error from the AI API.
+                    console.error('Invalid response format from AI:', data);
+                    throw new Error('Received an invalid response format from the AI service.');
                 }
             } catch (error) {
                 console.error('AI Response Error:', error);
+                // This is the fallback message the user sees.
                 return "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
             }
         }
@@ -671,7 +675,7 @@
 
             addMessage(message, 'user');
             if (Object.keys(chats).length === 0 || !chats[currentChatId]) {
-                saveChat(); // Save immediately to create history item
+                saveChat();
             }
             messageInput.value = '';
             sendBtn.disabled = true;
@@ -710,7 +714,6 @@
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
 
-        // Prevent spelling corrections for a cleaner input experience
         ['autocomplete', 'autocorrect', 'autocapitalize'].forEach(attr => messageInput.setAttribute(attr, 'off'));
         messageInput.setAttribute('spellcheck', 'false');
 
@@ -727,4 +730,4 @@
         }
     </script>
 </body>
-</html>
+        </html>

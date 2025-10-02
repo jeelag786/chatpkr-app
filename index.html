@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatPKR - Your AI. Your Language. Your Power.</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #10a37f;
+            --secondary-color: #1a1a1a;
+            --accent-color: #00b4d8;
+            --user-bubble: #10a37f;
+            --ai-bubble: #2d2d2d;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --bg-dark: #0a0a0a;
+            --sidebar-width: 280px;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Splash Screen */
+        #splashScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #000428 0%, #004e92 100%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 2000; opacity: 1; transition: opacity 0.5s ease;
+        }
+        .splash-content { text-align: center; animation: fadeIn 1s ease; }
+        .logo-container { position: relative; margin-bottom: 20px; }
+        .logo-icon {
+            width: 80px; height: 80px; background: linear-gradient(135deg, #00b4d8, #0077b6);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; color: white; margin: 0 auto 15px;
+            animation: logoRotate 3s ease-in-out, logoGlow 2s ease-in-out infinite alternate;
+            box-shadow: 0 0 30px rgba(0, 180, 216, 0.5); position: relative; overflow: hidden;
+        }
+        .logo-icon::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(transparent, #00b4d8, transparent 30%);
+            animation: rotate 4s linear infinite;
+        }
+        .logo-icon::after {
+            content: 'C'; position: absolute; width: 70px; height: 70px;
+            background: linear-gradient(135deg, #000428, #004e92); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 2.2rem;
+        }
+        .aura {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100px; height: 100px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 180, 216, 0.3) 0%, transparent 70%);
+            animation: auraPulse 2s ease-in-out infinite;
+        }
+        .particles { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .particle {
+            position: absolute; width: 2px; height: 2px; background: #00b4d8; border-radius: 50%;
+            animation: float 6s infinite ease-in-out;
+        }
+        .app-name {
+            font-size: 2.2rem; font-weight: bold; background: linear-gradient(135deg, #00b4d8, #90e0ef);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 8px; text-shadow: 0 0 20px rgba(0, 180, 216, 0.5);
+            animation: textGlow 2s ease-in-out infinite alternate;
+        }
+        .tagline {
+            font-size: 1rem; color: white; opacity: 0; animation: fadeInUp 1s ease 1s forwards;
+            line-height: 1.4; padding: 0 20px;
+        }
+
+        /* Firebase Auth Page */
+        #authContainer {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .auth-card {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .auth-logo { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .auth-logo .header-logo { width: 40px; height: 40px; font-size: 1.2rem; }
+        .auth-logo .app-title { font-size: 1.8rem; }
+        .auth-card h2 { margin-bottom: 25px; color: rgba(255, 255, 255, 0.9); font-weight: 500; }
+        .input-group { position: relative; margin-bottom: 20px; }
+        .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.4); }
+        .auth-input {
+            width: 100%; padding: 12px 12px 12px 40px; background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; color: white; font-size: 0.95rem; transition: all 0.3s;
+        }
+        .auth-input:focus { outline: none; border-color: var(--primary-color); background: rgba(255, 255, 255, 0.12); }
+        .auth-btn {
+            width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none;
+            border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600;
+            transition: all 0.3s; margin-top: 10px;
+        }
+        .auth-btn:hover { background: #0d8a6a; }
+        .toggle-auth { margin-top: 20px; font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); }
+        .toggle-auth a { color: var(--accent-color); text-decoration: none; font-weight: 600; cursor: pointer; }
+        .auth-error {
+            color: #ff6b6b; font-size: 0.8rem; margin-top: 15px; min-height: 1em;
+            text-align: left; padding-left: 5px;
+        }
+
+        #loginForm, #signupForm { display: none; }
+        
+        /* Main App */
+        #mainApp {
+            display: none; height: 100vh; max-width: 100%; overflow: hidden;
+        }
+        .app-container { display: flex; height: 100vh; }
+        .sidebar {
+            width: var(--sidebar-width); background: rgba(15, 15, 15, 0.95);
+            border-right: 1px solid rgba(255, 255, 255, 0.1); display: flex; flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .new-chat-btn {
+            width: 100%; padding: 12px; background: var(--primary-color); color: white; border: none;
+            border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            justify-content: center; font-size: 0.9rem; transition: all 0.3s;
+        }
+        .new-chat-btn:hover { background: #0d8a6a; }
+        .history-section { flex: 1; padding: 15px; overflow-y: auto; }
+        .history-title {
+            font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .clear-history { background: none; border: none; color: #ff6b6b; cursor: pointer; font-size: 0.8rem; }
+        .history-list { list-style: none; }
+        .history-item {
+            padding: 10px 12px; margin: 5px 0; background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.3s;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .history-item:hover { background: rgba(255, 255, 255, 0.1); }
+        .history-item.active { background: rgba(16, 163, 127, 0.2); border-left: 3px solid var(--primary-color); }
+        .sidebar-footer {
+            padding: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); font-size: 0.8rem; color: rgba(255,255,255,0.6);
+        }
+        .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .user-info i { font-size: 1.1rem; }
+        .user-email { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .logout-btn {
+            width: 100%; padding: 10px; background: #c0392b; color: white; border: none;
+            border-radius: 6px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;
+            transition: background 0.3s;
+        }
+        .logout-btn:hover { background: #e74c3c; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; background: rgba(10, 10, 10, 0.8); }
+        .header {
+            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 12px 20px;
+            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+        }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .menu-btn {
+            background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;
+            padding: 5px; border-radius: 5px; transition: all 0.3s;
+        }
+        .menu-btn:hover { background: rgba(255, 255, 255, 0.1); }
+        .app-brand { display: flex; align-items: center; gap: 10px; }
+        .header-logo {
+            width: 32px; height: 32px; background: linear-gradient(135deg, #00b4d8, #0077b6);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 1rem; box-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+        }
+        .app-title {
+            font-size: 1.3rem; font-weight: bold; background: linear-gradient(135deg, #00b4d8, #90e0ef);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .status-indicator { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #00b4d8; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #00ff00; animation: pulse 2s infinite; }
+        
+        .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message {
+            max-width: 80%; padding: 15px 18px; border-radius: 18px; line-height: 1.5;
+            animation: fadeIn 0.3s ease-in; word-wrap: break-word; font-size: 0.95rem;
+        }
+        .user-message { align-self: flex-end; background: var(--user-bubble); color: white; border-bottom-right-radius: 5px; }
+        .ai-message {
+            align-self: flex-start; background: var(--ai-bubble); color: white;
+            border-bottom-left-radius: 5px; border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .input-area { padding: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); background: rgba(10, 10, 10, 0.9); flex-shrink: 0; }
+        .input-container { display: flex; gap: 12px; align-items: flex-end; max-width: 800px; margin: 0 auto; }
+        .message-input {
+            flex: 1; padding: 15px 18px; border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px; background: rgba(255, 255, 255, 0.08); color: white;
+            font-size: 0.95rem; resize: none; min-height: 55px; max-height: 120px; transition: all 0.3s; font-family: inherit;
+        }
+        .message-input:focus { outline: none; border-color: var(--primary-color); background: rgba(255, 255, 255, 0.12); }
+        .message-input::placeholder { color: rgba(255, 255, 255, 0.5); }
+        .send-btn {
+            background: var(--primary-color); color: white; border: none; border-radius: 50%; width: 48px; height: 48px;
+            cursor: pointer; font-size: 1.1rem; transition: all 0.3s; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0;
+        }
+        .send-btn:hover { background: #0d8a6a; transform: scale(1.05); }
+        .send-btn:disabled { background: #666; cursor: not-allowed; transform: none; }
+        .typing-indicator {
+            display: none; padding: 15px 18px; align-self: flex-start; background: var(--ai-bubble);
+            border-radius: 18px; border-bottom-left-radius: 5px; margin: 5px 0;
+        }
+        .typing-dots { display: flex; gap: 4px; }
+        .typing-dot {
+            width: 7px; height: 7px; background: rgba(255, 255, 255, 0.5); border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        .footer {
+            background: rgba(10, 10, 10, 0.9); border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 20px; text-align: center; flex-shrink: 0;
+        }
+        .footer-content {
+            display: flex; justify-content: space-between; align-items: center;
+            color: rgba(255, 255, 255, 0.7); font-size: 0.8rem; max-width: 800px; margin: 0 auto;
+        }
+        .copyright { color: rgba(255, 255, 255, 0.5); }
+        .powered-by { display: flex; align-items: center; gap: 6px; }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed; left: 0; top: 0; height: 100%; z-index: 1000;
+                transform: translateX(-100%);
+            }
+            .sidebar.active { transform: translateX(0); }
+            .overlay {
+                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.5); z-index: 999;
+            }
+            .overlay.active { display: block; }
+            .message { max-width: 90%; font-size: 0.9rem; }
+            .footer-content { flex-direction: column; gap: 8px; }
+        }
+        @media (max-width: 480px) {
+            .auth-card { padding: 30px 25px; }
+            .header { padding: 10px 15px; }
+            .chat-messages { padding: 15px; }
+            .input-area { padding: 15px; }
+            .message-input { padding: 12px 15px; font-size: 0.9rem; }
+            .send-btn { width: 44px; height: 44px; }
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes logoRotate { 0% { transform: scale(0.5) rotate(0deg); opacity: 0; } 50% { transform: scale(1.1) rotate(180deg); opacity: 1; } 100% { transform: scale(1) rotate(360deg); opacity: 1; } }
+        @keyframes logoGlow { from { box-shadow: 0 0 15px rgba(0, 180, 216, 0.5); } to { box-shadow: 0 0 30px rgba(0, 180, 216, 0.8); } }
+        @keyframes auraPulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; } }
+        @keyframes rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes float { 0%, 100% { transform: translateY(0) translateX(0); } 25% { transform: translateY(-15px) translateX(8px); } 50% { transform: translateY(-30px) translateX(-8px); } 75% { transform: translateY(-15px) translateX(-15px); } }
+        @keyframes textGlow { from { text-shadow: 0 0 15px rgba(0, 180, 216, 0.5); } to { text-shadow: 0 0 25px rgba(0, 180, 216, 0.8); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div id="splashScreen">
+        <div class="particles" id="particles"></div>
+        <div class="splash-content">
+            <div class="logo-container">
+                <div class="aura"></div>
+                <div class="logo-icon"></div>
+            </div>
+            <h1 class="app-name">ChatPKR</h1>
+            <p class="tagline">Your AI. Your Language. Your Power.</p>
+        </div>
+    </div>
+
+    <!-- Firebase Auth Page -->
+    <div id="authContainer">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <div class="header-logo">C</div>
+                <h1 class="app-title">ChatPKR</h1>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <h2>Welcome Back</h2>
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="loginEmail" class="auth-input" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="loginPassword" class="auth-input" placeholder="Password" required>
+                </div>
+                <div class="auth-error" id="loginError"></div>
+                <button type="submit" class="auth-btn">Login</button>
+                <p class="toggle-auth">Don't have an account? <a id="showSignup">Sign Up</a></p>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signupForm">
+                <h2>Create Account</h2>
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="signupEmail" class="auth-input" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="signupPassword" class="auth-input" placeholder="Password (min. 6 characters)" required>
+                </div>
+                <div class="auth-error" id="signupError"></div>
+                <button type="submit" class="auth-btn">Sign Up</button>
+                <p class="toggle-auth">Already have an account? <a id="showLogin">Login</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp">
+        <div class="app-container">
+            <!-- Sidebar -->
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <button class="new-chat-btn" id="newChatBtn"><i class="fas fa-plus"></i> New Chat</button>
+                </div>
+                <div class="history-section">
+                    <div class="history-title">
+                        <span>Chat History</span>
+                        <button class="clear-history" id="clearHistoryBtn"><i class="fas fa-trash"></i> Clear</button>
+                    </div>
+                    <ul class="history-list" id="historyList"></ul>
+                </div>
+                <div class="sidebar-footer">
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span class="user-email" id="userEmail"></span>
+                    </div>
+                    <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+
+            <!-- Overlay for mobile -->
+            <div class="overlay" id="overlay"></div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <header class="header">
+                    <div class="header-left">
+                        <button class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
+                        <div class="app-brand">
+                            <div class="header-logo">C</div>
+                            <h1 class="app-title">ChatPKR</h1>
+                        </div>
+                    </div>
+                    <div class="status-indicator">
+                        <div class="status-dot"></div>
+                        <span>AI Connected</span>
+                    </div>
+                </header>
+                <div class="chat-area">
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="typing-indicator" id="typingIndicator">
+                        <div class="typing-dots">
+                            <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+                        </div>
+                    </div>
+                    <div class="input-area">
+                        <div class="input-container">
+                            <textarea class="message-input" id="messageInput" placeholder="Message ChatPKR..." rows="1"></textarea>
+                            <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <footer class="footer">
+                    <div class="footer-content">
+                        <div class="copyright">Copyright © 2025 JRRB. All rights reserved.</div>
+                        <div class="powered-by"><i class="fas fa-bolt"></i><span>Powered by AI Technology</span></div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAhXlLYOvzLQqjjRpGj7uX89qxxu8rF-SQ",
+            authDomain: "chatpkr-17841.firebaseapp.com",
+            databaseURL: "https://chatpkr-17841-default-rtdb.firebaseio.com",
+            projectId: "chatpkr-17841",
+            storageBucket: "chatpkr-17841.firebasestorage.app",
+            messagingSenderId: "1035851670591",
+            appId: "1:1035851670591:web:3abfc68dc1cc03a7d6448a",
+            measurementId: "G-VNZCDE94SF"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // --- DOM ELEMENTS ---
+        const splashScreen = document.getElementById('splashScreen');
+        const authContainer = document.getElementById('authContainer');
+        const mainApp = document.getElementById('mainApp');
+        
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const showSignup = document.getElementById('showSignup');
+        const showLogin = document.getElementById('showLogin');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const newChatBtn = document.getElementById('newChatBtn');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const historyList = document.getElementById('historyList');
+
+        // --- CHAT STATE ---
+        let isProcessing = false;
+        let currentChatId = null;
+        let chats = {};
+
+        // --- SPLASH SCREEN LOGIC ---
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                const size = Math.random() * 2 + 1;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            setTimeout(() => {
+                splashScreen.style.opacity = '0';
+                setTimeout(() => splashScreen.style.display = 'none', 500);
+            }, 3000);
+        });
+
+        // --- FIREBASE AUTHENTICATION ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // User is logged in
+                authContainer.style.display = 'none';
+                mainApp.style.display = 'block';
+                document.getElementById('userEmail').textContent = user.email;
+                initializeChat();
+            } else {
+                // User is logged out
+                mainApp.style.display = 'none';
+                authContainer.style.display = 'flex';
+                loginForm.style.display = 'block';
+                signupForm.style.display = 'none';
+                document.getElementById('loginError').textContent = '';
+                document.getElementById('signupError').textContent = '';
+            }
+        });
+
+        showSignup.addEventListener('click', () => {
+            loginForm.style.display = 'none';
+            signupForm.style.display = 'block';
+        });
+
+        showLogin.addEventListener('click', () => {
+            signupForm.style.display = 'none';
+            loginForm.style.display = 'block';
+        });
+
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const errorElement = document.getElementById('signupError');
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .catch(error => {
+                    errorElement.textContent = error.message;
+                });
+        });
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorElement = document.getElementById('loginError');
+
+            auth.signInWithEmailAndPassword(email, password)
+                .catch(error => {
+                    errorElement.textContent = error.message;
+                });
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to logout?')) {
+                auth.signOut();
+                localStorage.removeItem('chatpkr_chats'); // Clear local storage on logout
+            }
+        });
+
+        // --- CHAT LOGIC ---
+        function generateChatId() { return 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
+
+        function saveChat() {
+            if (!currentChatId) return;
+            const messages = Array.from(chatMessages.children)
+                .filter(el => el.classList.contains('message'))
+                .map(msg => ({
+                    html: msg.innerHTML,
+                    className: msg.className
+                }));
+            
+            chats[currentChatId] = {
+                messages: messages,
+                timestamp: Date.now(),
+                title: getChatTitle(messages)
+            };
+            
+            localStorage.setItem('chatpkr_chats', JSON.stringify(chats));
+            loadChatHistory();
+        }
+
+        function getChatTitle(messages) {
+            const userMessage = messages.find(msg => msg.className.includes('user-message'));
+            if (userMessage) {
+                const text = userMessage.html.replace(/<[^>]*>/g, '').trim();
+                return text.length > 30 ? text.substring(0, 30) + '...' : text;
+            }
+            return 'New Chat';
+        }
+
+        function loadChatHistory() {
+            historyList.innerHTML = '';
+            const chatEntries = Object.entries(chats).sort((a, b) => b[1].timestamp - a[1].timestamp);
+            
+            if (chatEntries.length === 0) {
+                historyList.innerHTML = '<div style="padding: 10px; color: rgba(255,255,255,0.5); text-align: center;">No history</div>';
+                return;
+            }
+            
+            chatEntries.forEach(([chatId, chat]) => {
+                const li = document.createElement('li');
+                li.className = `history-item ${chatId === currentChatId ? 'active' : ''}`;
+                li.textContent = chat.title;
+                li.onclick = () => loadChat(chatId);
+                historyList.appendChild(li);
+            });
+        }
+
+        function loadChat(chatId) {
+            currentChatId = chatId;
+            const chat = chats[chatId];
+            
+            chatMessages.innerHTML = '';
+            chat.messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = msg.className;
+                messageDiv.innerHTML = msg.html;
+                chatMessages.appendChild(messageDiv);
+            });
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            loadChatHistory();
+            hideSidebar();
+        }
+
+        function startNewChat() {
+            currentChatId = generateChatId();
+            chatMessages.innerHTML = '';
+            loadChatHistory();
+            hideSidebar();
+            messageInput.focus();
+        }
+
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all chat history?')) {
+                chats = {};
+                localStorage.setItem('chatpkr_chats', JSON.stringify(chats));
+                startNewChat();
+            }
+        }
+
+        function toggleSidebar() { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); }
+        function hideSidebar() { sidebar.classList.remove('active'); overlay.classList.remove('active'); }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            // Simple sanitization
+            const sanitizedText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            messageDiv.innerHTML = sanitizedText.replace(/\n/g, '<br>'); // Render newlines
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTyping() { typingIndicator.style.display = 'flex'; chatMessages.scrollTop = chatMessages.scrollHeight; }
+        function hideTyping() { typingIndicator.style.display = 'none'; }
+
+        // --- NEW, SECURE AI RESPONSE FUNCTION ---
+        async function getAIResponse(userMessage) {
+            try {
+                // The URL now points to our own serverless function
+                const response = await fetch('/.netlify/functions/get-ai-response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    // We only need to send the user's message
+                    body: JSON.stringify({
+                        message: userMessage
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.choices && data.choices[0] && data.choices[0].message) {
+                    return data.choices[0].message.content;
+                } else {
+                    throw new Error('Invalid response format from serverless function');
+                }
+            } catch (error) {
+                console.error('AI Response Error:', error);
+                return "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
+            }
+        }
+
+        async function sendMessage() {
+            if (isProcessing) return;
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, 'user');
+            if (Object.keys(chats).length === 0 || !chats[currentChatId]) {
+                saveChat(); // Save immediately to create history item
+            }
+            messageInput.value = '';
+            sendBtn.disabled = true;
+            isProcessing = true;
+            messageInput.style.height = 'auto';
+            showTyping();
+
+            try {
+                const aiResponse = await getAIResponse(message);
+                addMessage(aiResponse, 'ai');
+                setTimeout(saveChat, 100);
+            } catch (error) {
+                console.error('Send Message Error:', error);
+                addMessage(`I apologize for the inconvenience. There seems to be a temporary connection issue. Please check your internet connection and try again.`, 'ai');
+            } finally {
+                hideTyping();
+                sendBtn.disabled = false;
+                isProcessing = false;
+                messageInput.focus();
+            }
+        }
+
+        // --- EVENT LISTENERS & INITIALIZATION ---
+        sendBtn.addEventListener('click', sendMessage);
+        menuBtn.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', hideSidebar);
+        newChatBtn.addEventListener('click', startNewChat);
+        clearHistoryBtn.addEventListener('click', clearHistory);
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Prevent spelling corrections for a cleaner input experience
+        ['autocomplete', 'autocorrect', 'autocapitalize'].forEach(attr => messageInput.setAttribute(attr, 'off'));
+        messageInput.setAttribute('spellcheck', 'false');
+
+        function initializeChat() {
+            chats = JSON.parse(localStorage.getItem('chatpkr_chats') || '{}');
+            const chatEntries = Object.entries(chats);
+            if (chatEntries.length > 0) {
+                const latestChat = chatEntries.sort((a, b) => b[1].timestamp - a[1].timestamp)[0];
+                loadChat(latestChat[0]);
+            } else {
+                startNewChat();
+            }
+            messageInput.focus();
+        }
+    </script>
+</body>
+</html>
